@@ -1,0 +1,192 @@
+
+<!-- saved from url=(0109)https://roundcube.rpi.edu/roundcube/?_nocheck=1&_embed=1&_part=5&_uid=4931&_mbox=INBOX&_action=get&_task=mail -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></head><body><pre style="word-wrap: break-word; white-space: pre-wrap;">#ifndef Vec_h_
+#define Vec_h_
+// Simple implementation of the vector class, revised from Koenig and Moo.  This 
+// class is implemented using a dynamically allocated array (of templated type T).  
+// We ensure that that m_size is always &lt;= m_alloc and when a push_back or resize 
+// call would violate this condition, the data is copied to a larger array.
+
+template &lt;class T&gt; class Vec {
+
+public:   
+  // TYPEDEFS
+  typedef T* iterator;
+  typedef const T* const_iterator;
+  typedef unsigned int size_type;
+
+  // CONSTRUCTORS, ASSIGNMNENT OPERATOR, &amp; DESTRUCTOR
+  Vec() { this-&gt;create(); }
+  Vec(size_type n, const T&amp; t = T()) { this-&gt;create(n, t); }
+  Vec(const Vec&amp; v) { copy(v); }
+  Vec&amp; operator=(const Vec&amp; v); 
+  ~Vec() { delete [] m_data; }
+
+  // MEMBER FUNCTIONS AND OTHER OPERATORS
+  T&amp; operator[] (size_type i) { return m_data[i]; }
+  const T&amp; operator[] (size_type i) const { return m_data[i]; }
+  void push_back(const T&amp; t);
+  iterator erase(iterator p);
+  void resize(size_type n, const T&amp; fill_in_value = T());
+  void clear() { delete [] m_data;  create(); }
+  bool empty() const { return m_size == 0; }
+  size_type size() const { return m_size; }
+  size_type alloc() const { return m_alloc; }
+  void print();
+  void shrink_alloc();
+  T* data() const { return m_data; }
+
+  // ITERATOR OPERATIONS
+  iterator begin() { return m_data; }
+  const_iterator begin() const { return m_data; }
+  iterator end() { return m_data + m_size; }
+  const_iterator end() const { return m_data + m_size; }
+
+private:  
+  // PRIVATE MEMBER FUNCTIONS
+  void create();
+  void create(size_type n, const T&amp; val);
+  void copy(const Vec&lt;T&gt;&amp; v); 
+
+  // REPRESENTATION
+  T* m_data;         // Pointer to first location in the allocated array
+  size_type m_size;  // Number of elements stored in the vector
+  size_type m_alloc; // Number of array locations allocated,  m_size &lt;= m_alloc
+};
+
+// CHECKPOINT 1
+template &lt;class T&gt; int remove_matching_elements(Vec&lt;T&gt;&amp; v, const T&amp; element) {
+  int count = 0;
+  typedef T* iterator;
+  typedef unsigned int size_type;
+  int orig_size = v.size();
+  
+  for (iterator q = v.begin(); q != v.end(); ++q) {
+	  	if (*q == element) {
+		    v.erase(q);
+		    q = v.begin();
+		    count++;
+	  } 
+  }
+  
+
+  while (orig_size / v.size() &gt; 2) {
+		v.shrink_alloc();
+    }
+
+  return count;
+}
+
+// CHECKPOINT 2
+template &lt;class T&gt;  void Vec&lt;T&gt;::print() {
+	for (size_type i = 0; i &lt; m_size; i++) {
+		cout &lt;&lt; m_data[i] &lt;&lt; " ";
+	}
+	cout &lt;&lt; endl;
+}
+
+template &lt;class T&gt;  void Vec&lt;T&gt;::shrink_alloc() {
+  T* temp = new T[this-&gt;m_alloc / 2];
+
+  // Copy the data
+  for (size_type i = 0; i &lt; this-&gt;m_size / 2; ++i)
+    temp[ i ] = this-&gt;m_data[ i ];
+
+  delete [] this-&gt;m_data;
+  m_data = temp;
+  m_alloc /= 2;
+}
+
+// Create an empty vector (null pointers everywhere).
+template &lt;class T&gt;  void Vec&lt;T&gt;::create() {
+  m_data = NULL;
+  m_size = m_alloc = 0;  // No memory allocated yet
+}
+
+// Create a vector with size n, each location having the given value
+template &lt;class T&gt; void Vec&lt;T&gt;::create(size_type n, const T&amp; val) {
+  m_data = new T[n];
+  m_size = m_alloc = n;
+  for (T* p = m_data; p != m_data + m_size; ++p)
+    *p = val;
+}
+
+// Assign one vector to another, avoiding duplicate copying.
+template &lt;class T&gt; Vec&lt;T&gt;&amp; Vec&lt;T&gt;::operator=(const Vec&lt;T&gt;&amp; v) {
+  if (this != &amp;v) {
+    delete [] m_data;
+    this -&gt; copy(v);
+  }
+  return *this;
+}
+
+// Create the vector as a copy of the given vector. 
+template &lt;class T&gt; void Vec&lt;T&gt;::copy(const Vec&lt;T&gt;&amp; v) {
+  this-&gt;m_alloc = v.m_alloc;
+  this-&gt;m_size = v.m_size;
+  this-&gt;m_data = new T[this-&gt;m_alloc];
+  
+  // Copy the data
+  for (size_type i = 0; i &lt; this-&gt;m_size; ++i)
+    this -&gt; m_data[ i ] = v.m_data[ i ];
+}
+
+// Add an element to the end, resize if necesssary. 
+template &lt;class T&gt; void Vec&lt;T&gt;::push_back(const T&amp; val) {
+  if (m_size == m_alloc) { 
+    // Allocate a larger array, and copy the old values
+
+    // Calculate the new allocation.  Make sure it is at least one.
+    m_alloc *= 2;
+    if (m_alloc &lt; 1) m_alloc = 1;
+    
+    // Allocate and copy the old array
+    T* new_data = new T[ m_alloc ];
+    for (size_type i=0; i&lt;m_size; ++i)
+      new_data[i] = m_data[i];
+    
+    // Delete the old array and reset the pointers
+    delete [] m_data;
+    m_data = new_data;
+  }
+
+  // Add the value at the last location and increment the bound
+  m_data[m_size] = val;
+  ++ m_size;
+}
+
+// Shift each entry of the array after the iterator. Return the iterator, 
+// which will have the same value, but point to a different element.
+template &lt;class T&gt; typename Vec&lt;T&gt;::iterator Vec&lt;T&gt;::erase(iterator p) {
+  // remember iterator and T* are equivalent
+  for (iterator q = p; q &lt; m_data+m_size-1; ++q)
+    *q = *(q+1);
+  m_size --;
+  return p;
+}
+
+// If n is less than or equal to the current size, just change the size.  If n is 
+// greater than the current size, the new slots must be filled in with the given value. 
+// Re-allocation should occur only if necessary.  push_back should not be used.
+template &lt;class T&gt; void Vec&lt;T&gt;::resize(size_type n, const T&amp; fill_in_value) {
+  if (n &lt;= m_size)
+    m_size = n;
+  else {
+    // If necessary, allocate new space and copy the old values
+    if (n &gt; m_alloc) {
+      m_alloc = n;
+      T* new_data = new T[m_alloc];
+      for (size_type i=0; i&lt;m_size; ++i)
+	new_data[i] = m_data[i];
+      delete [] m_data;
+      m_data = new_data;
+    }
+    
+    // Now fill in the remaining values and assign the final size.
+    for (size_type i = m_size; i&lt;n; ++i)
+      m_data[i] = fill_in_value;
+    m_size = n;
+  }
+}
+#endif
+</pre></body></html>

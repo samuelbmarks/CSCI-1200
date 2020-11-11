@@ -1,0 +1,36 @@
+#include <iostream> // library for reading & writing from the console/keyboard
+#include <cmath> // library with the square root function & absolute value
+#include <cstdlib> // library with the exit function
+
+int main()
+{
+  int numtimes;
+  std::cout << "Enter the number of values you want in the sequence" << std::endl;
+  std::cin >> numtimes;
+
+  double myarray[numtimes];
+  double mynum, average, sum =0;
+  std::cout << "Enter a value" << std::endl;
+  for(unsigned i = 0; i<numtimes; i++)
+  {
+    std::cin >> mynum;
+    myarray[i] = mynum;
+  }
+
+  for(unsigned i = 0; i<numtimes; i++)
+  {
+    sum += myarray[i];
+  }
+  average = sum / numtimes;
+  std::cout << "The average is: " << average << std::endl;
+
+  for(unsigned i = 0; i<numtimes; i++)
+  {
+    if(myarray[i]<average)
+    {
+      std::cout << myarray[i] << " is less than the average"<< std::endl;
+    }
+  }
+
+  return 0;
+}

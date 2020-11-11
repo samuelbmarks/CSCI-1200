@@ -1,0 +1,4 @@
+Histogram for 5 users:
+ Degree 1: 4
+ Degree 2: 1
+Users with an ID within +/-1000000000 of 5: 1 2 3 4

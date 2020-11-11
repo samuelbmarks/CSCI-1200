@@ -1,0 +1,5 @@
+load-connections mc.txt
+load-locations ml.txt
+nodes-within-ID-range 444 111
+nodes-within-ID-range 999 400
+nodes-within-ID-range 555 50

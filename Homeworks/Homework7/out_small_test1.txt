@@ -1,0 +1,4 @@
+Histogram for 6 users:
+ Degree 1: 4
+ Degree 2: 1
+ Degree 3: 1
